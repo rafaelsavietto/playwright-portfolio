@@ -25,7 +25,7 @@ export const test = base.extend<Fixtures>({
   checkoutPage: async ({ page }, use) => {
     await use(new CheckoutPage(page));
   },
-  // Fixture pronta com usuário já logado, para não repetir login em cada teste
+  // Ready-made fixture with a logged-in user, so each test doesn't repeat the login
   loggedInPage: async ({ page }, use) => {
     const login = new LoginPage(page);
     await login.goto();
