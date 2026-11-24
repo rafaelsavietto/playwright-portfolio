@@ -1,38 +1,46 @@
 # SauceDemo E2E Test Suite — Playwright + TypeScript
 
-Suíte de testes end-to-end para o app público [SauceDemo](https://www.saucedemo.com), construída com **Playwright** e **TypeScript**, usando o padrão **Page Object Model (POM)** e pipeline de **CI/CD** via **GitHub Actions**.
+[![Playwright E2E Tests](https://github.com/rafaelsavietto/playwright-portfolio/actions/workflows/playwright.yml/badge.svg)](https://github.com/rafaelsavietto/playwright-portfolio/actions/workflows/playwright.yml)
 
-Este projeto tem a finalidade de exercitas e demonstrar, na prática, competências de automação de testes: arquitetura de suíte, fixtures reutilizáveis, execução multi-browser e multi-dispositivo, e publicação automática de relatórios.
+**📊 Latest test report:** https://rafaelsavietto.github.io/playwright-portfolio/
 
-## 🎯 Objetivo
+End-to-end test suite for the public demo store [SauceDemo](https://www.saucedemo.com), built with **Playwright** and **TypeScript** using the **Page Object Model**, and run automatically in a **GitHub Actions** pipeline that publishes the HTML report to GitHub Pages.
 
-Este repositório faz parte de um portfólio de QA/Automação, cobrindo:
+## What this project demonstrates
 
-- Testes de **login** (caminho feliz, credenciais inválidas, usuário bloqueado, campos vazios)
-- Testes de **catálogo de produtos** (adicionar/remover do carrinho, ordenação por preço)
-- Teste de **fluxo completo de checkout** (do login até a confirmação do pedido)
-- **CI/CD**: execução automática a cada push/PR, execução agendada semanal, e publicação do relatório HTML no GitHub Pages
+- **Suite architecture:** Page Objects keep selectors and actions out of the tests; custom fixtures (e.g. an already-logged-in user) remove repeated setup.
+- **Meaningful assertions:** the checkout test checks the order math (item total = sum of item prices, total = item total + tax), not just that a price is displayed.
+- **Cross-browser and mobile:** every test runs in Chromium, Firefox, WebKit and an emulated Pixel 7.
+- **CI/CD with quality gates:** a type-check step fails the build on broken code before any browser starts; tests run on every push and pull request and every Monday on a schedule; failed tests are retried in CI, with traces, screenshots and video kept for debugging.
+- **Published results:** the HTML report from `main` is deployed to GitHub Pages, so anyone can see the latest run without cloning the repo.
 
-## 🛠️ Stack
+## Test coverage
 
-- [Playwright](https://playwright.dev/) + TypeScript
-- Page Object Model (POM) com fixtures customizadas
-- GitHub Actions (CI/CD)
-- Execução em Chromium, Firefox, WebKit e emulação mobile (Pixel 7)
+| Area | Scenarios |
+|---|---|
+| Login | valid user, wrong password, locked-out user, empty fields |
+| Inventory | add and remove from cart, several items in cart, sort by price (both directions) |
+| Checkout | full purchase with order-total math check, required-field validation |
 
-## Estrutura do projeto
+## Stack
+
+- [Playwright Test](https://playwright.dev/) + TypeScript
+- Page Object Model with custom fixtures
+- GitHub Actions + GitHub Pages
+
+## Project structure
 
 ```
 playwright-portfolio/
 ├── .github/workflows/
-│   └── playwright.yml        # Pipeline de CI/CD
+│   └── playwright.yml        # CI/CD pipeline
 ├── pages/                    # Page Objects
 │   ├── LoginPage.ts
 │   ├── InventoryPage.ts
 │   ├── CartPage.ts
 │   └── CheckoutPage.ts
 ├── tests/
-│   ├── fixtures.ts           # Fixtures customizadas (ex: usuário já logado)
+│   ├── fixtures.ts           # Custom fixtures (e.g. logged-in user)
 │   ├── login.spec.ts
 │   ├── inventory.spec.ts
 │   └── checkout.spec.ts
@@ -41,66 +49,53 @@ playwright-portfolio/
 └── tsconfig.json
 ```
 
-## Como rodar localmente
+## Running locally
 
-Pré-requisito: Node.js 18+.
+Requires Node.js 20 or later.
 
 ```bash
-# 1. Clonar o repositório
-git clone https://github.com/<seu-usuario>/saucedemo-e2e-playwright.git
-cd saucedemo-e2e-playwright
+git clone https://github.com/rafaelsavietto/playwright-portfolio.git
+cd playwright-portfolio
 
-# 2. Instalar dependências
 npm install
-
-# 3. Instalar os browsers do Playwright
 npm run install:browsers
 
-# 4. Rodar todos os testes (headless)
-npm test
-
-# Rodar com interface visual (modo debug)
-npm run test:ui
-
-# Rodar apenas no Chromium
-npm run test:chromium
-
-# Ver o relatório HTML após a execução
-npm run report
+npm test                  # all browsers, headless
+npm run test:chromium     # Chromium only
+npm run test:ui           # interactive UI mode for debugging
+npm run report            # open the last HTML report
 ```
 
-## CI/CD
+## CI/CD pipeline
 
-O workflow em `.github/workflows/playwright.yml`:
+The workflow in `.github/workflows/playwright.yml`:
 
-1. Roda a suíte completa a cada `push`/`pull request` na branch `main`
-2. Também roda automaticamente toda segunda-feira (cron), para detectar quebras causadas por mudanças no site alvo, mesmo sem commits novos
-3. Publica o relatório HTML do Playwright no **GitHub Pages** a cada execução na `main`
+1. Installs dependencies and **type-checks** the project (fast fail on broken code).
+2. Runs the full suite on every push and pull request to `main`, every Monday at 06:00 UTC, and on demand.
+3. Uploads the HTML report as a build artifact.
+4. On `main`, **deploys the report to GitHub Pages**, even when tests fail, so the failure is visible.
 
-> Para ativar a publicação do relatório, habilite o GitHub Pages no repositório (Settings → Pages → Source: **GitHub Actions**).
+## SauceDemo test users
 
-## Credenciais de teste (SauceDemo)
-
-O SauceDemo disponibiliza usuários fixos para testar diferentes cenários:
-
-| Usuário | Comportamento |
+| User | Behavior |
 |---|---|
-| `standard_user` | Fluxo normal, sem problemas |
-| `locked_out_user` | Usuário bloqueado |
-| `problem_user` | Simula bugs de UI (imagens erradas) |
-| `performance_glitch_user` | Simula lentidão no carregamento |
+| `standard_user` | Normal flow |
+| `locked_out_user` | Blocked at login |
+| `problem_user` | Simulates UI bugs (wrong images) |
+| `performance_glitch_user` | Simulates slow loading |
 
-Senha para todos: `secret_sauce`
+Password for all: `secret_sauce` (public demo credentials published by SauceDemo).
 
-## Próximos passos (roadmap do portfólio)
+## Roadmap
 
-- [ ] Adicionar testes com `problem_user` e `performance_glitch_user` para validar resiliência
-- [ ] Integrar relatório Allure como alternativa ao HTML nativo
-- [ ] Adicionar testes de acessibilidade com `axe-core`
-- [ ] Repositório irmão: testes de performance com k6 sobre uma API pública
-- [ ] Repositório irmão: geração de casos de teste assistida por IA a partir de user stories
+- [ ] API tests with Playwright's `request` fixture against a public API
+- [ ] AI-assisted test generation from user stories, with a write-up of the workflow
+- [ ] Tests with `problem_user` and `performance_glitch_user`
+- [ ] Accessibility checks with `axe-core`
+- [ ] Allure report as an alternative to the built-in HTML report
+- [ ] Companion repo: performance tests with k6
 
-## Autor
+## Author
 
-**Rafael Silva Savietto** — QA Engineer
+**Rafael Silva Savietto** — Senior QA Engineer
 [LinkedIn](https://linkedin.com/in/rafael-silva-savietto-2b9b4559)
